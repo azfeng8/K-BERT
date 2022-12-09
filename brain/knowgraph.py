@@ -66,7 +66,7 @@ class KnowledgeGraph(object):
                     except:
                         print("[KnowledgeGraph] Bad spo:", line)
                     if self.predicate:
-                        value = pred + obje
+                        value = pred + ' ' + obje
                     else:
                         value = obje
                     if subj in lookup_table.keys():
