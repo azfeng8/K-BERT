@@ -1,0 +1,317 @@
+>>> # English data shape: (3480905, 8)
+>>> eng_data = data.filter(language_filter)
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 34075/34075 [03:53<00:00, 145.98ba/s]
+>>> print(f"Eng data shape: {eng_data.shape}")
+Eng data shape: (3480905, 8)
+>>> 
+>>> # to get a third of the data
+>>> third_data = eng_data.filter(lambda example, idx: idx  < 1133083, with_indices=True)
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3481/3481 [01:04<00:00, 53.84ba/s]
+>>> 
+>>> filtered_data = third_data.map(english_map)
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1133083/1133083 [01:17<00:00, 14651.89ex/s]
+>>> 
+>>> filtered_data.to_csv("one_million_examples.csv")
+Creating CSV from Arrow format: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1134/1134 [00:05<00:00, 207.56ba/s]
+360281926
+>>> eng_data.to_csv("all_eng_data.csv")
+Creating CSV from Arrow format: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3481/3481 [00:29<00:00, 118.23ba/s]
+1196919888
+>>> eng_data[0]
+{'sentence': '', 'full_rel': '/a/[/r/Antonym/,/c/en/0/n/,/c/en/1/]', 'rel': '/r/Antonym', 'arg1': '/c/en/0/n', 'arg2': '/c/en/1', 'lang': 'en', 'extra_info': '{"dataset": "/d/wiktionary/fr", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/fr", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', 'weight': 1.0}
+>>> filtered_data[0]
+{'sentence': '', 'full_rel': '/a/[/r/Antonym/,/c/en/0/n/,/c/en/1/]', 'rel': 'antonym', 'arg1': '0', 'arg2': '1', 'lang': 'en', 'extra_info': '{"dataset": "/d/wiktionary/fr", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/fr", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', 'weight': 1.0}
+>>> filtered_data[-1]
+{'sentence': '', 'full_rel': '/a/[/r/HasContext/,/c/en/𐑞/,/c/en/shavian/]', 'rel': 'has context', 'arg1': '𐑞', 'arg2': 'shavian', 'lang': 'en', 'extra_info': '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', 'weight': 1.0}
+>>> filtered_data[-2]
+{'sentence': '', 'full_rel': '/a/[/r/HasContext/,/c/en/𐑝/,/c/en/shavian/]', 'rel': 'has context', 'arg1': '𐑝', 'arg2': 'shavian', 'lang': 'en', 'extra_info': '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', 'weight': 1.0}
+>>> filtered_data[-10:]
+{'sentence': ['', '', '', '', '', '', '', '', '', ''], 'full_rel': ['/a/[/r/HasContext/,/c/en/⠭_⠎/,/c/en/braille/]', '/a/[/r/HasContext/,/c/en/⠸_⠩/,/c/en/braille/]', '/a/[/r/HasContext/,/c/en/⠺_⠙/,/c/en/braille/]', '/a/[/r/HasContext/,/c/en/⠽_⠗/,/c/en/braille/]', '/a/[/r/HasContext/,/c/en/⠽_⠗_⠋/,/c/en/braille/]', '/a/[/r/HasContext/,/c/en/⠽_⠗_⠧_⠎/,/c/en/braille/]', '/a/[/r/HasContext/,/c/en/𐑑/,/c/en/shavian/]', '/a/[/r/HasContext/,/c/en/𐑓/,/c/en/shavian/]', '/a/[/r/HasContext/,/c/en/𐑝/,/c/en/shavian/]', '/a/[/r/HasContext/,/c/en/𐑞/,/c/en/shavian/]'], 'rel': ['has context', 'has context', 'has context', 'has context', 'has context', 'has context', 'has context', 'has context', 'has context', 'has context'], 'arg1': ['⠭_⠎', '⠸_⠩', '⠺_⠙', '⠽_⠗', '⠽_⠗_⠋', '⠽_⠗_⠧_⠎', '𐑑', '𐑓', '𐑝', '𐑞'], 'arg2': ['braille', 'braille', 'braille', 'braille', 'braille', 'braille', 'shavian', 'shavian', 'shavian', 'shavian'], 'lang': ['en', 'en', 'en', 'en', 'en', 'en', 'en', 'en', 'en', 'en'], 'extra_info': ['{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n', '{"dataset": "/d/wiktionary/en", "license": "cc:by-sa/4.0", "sources": [{"contributor": "/s/resource/wiktionary/en", "process": "/s/process/wikiparsec/2"}], "weight": 1.0}\n'], 'weight': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]}
+>>> filtered_data.column_names
+['sentence', 'full_rel', 'rel', 'arg1', 'arg2', 'lang', 'extra_info', 'weight']
+>>> filtered_data.remove_columns(
+KeyboardInterrupt
+>>> filtered_data[0]['sentence']
+''
+>>> filtered_data[0]['sentence']
+''
+>>> filtered_data[-10]['sentence']
+''
+>>> filtered_data[-10]['sentence']
+KeyboardInterrupt
+>>> removed_cols = ['sentence', 'full_rel', 'rel', 'arg1', 'arg2', 'lang', 'extra_info', 'weight']
+>>> removed_cols = ['sentence', 'full_rel', 'extra_info', 'weight']
+>>> filtered_data[-10]['sentence']
+KeyboardInterrupt
+>>> final_subset = filtered_data.remove_columns(removed_cols)
+>>> final_subset.shape
+(1133083, 4)
+>>> final_subset.column_names
+['rel', 'arg1', 'arg2', 'lang']
+>>> outliers = final_subset.filter(lambda x: x['lang'] != 'en')
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1134/1134 [00:03<00:00, 314.06ba/s]
+>>> outliers.shape
+(57869, 4)
+>>> final_subset.shape
+(1133083, 4)
+>>> outliers[0]
+{'rel': 'external url', 'arg1': '1,000_megawatt_plutonium_reactor', 'arg2': '_megawatt_plutonium_reactor', 'lang': 'en/sw.opencyc.org'}
+>>> outliers[-1]
+{'rel': 'has context', 'arg1': 'en', 'arg2': 'enclitic_after_consonant', 'lang': 'egl/en'}
+>>> outliers[-10]
+{'rel': 'external url', 'arg1': 'zygocarpum', 'arg2': 'Zygocarpum', 'lang': 'en/sw.opencyc.org'}
+>>> outliers = final_subset.filter(lambda x: x['lang'] != 'en' and x['lang'] != 'en/sw.opencyc.org')
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1134/1134 [00:03<00:00, 320.88ba/s]
+>>> outliers
+Dataset({
+    features: ['rel', 'arg1', 'arg2', 'lang'],
+    num_rows: 1
+})
+>>> outliers.shape
+(1, 4)
+>>> outliers
+Dataset({
+    features: ['rel', 'arg1', 'arg2', 'lang'],
+    num_rows: 1
+})
+>>> final_subset.column_names
+['rel', 'arg1', 'arg2', 'lang']
+>>> sorted_final_subset = final_subset.sort("rel")
+>>> sorted_final_subset[0]
+{'rel': 'antonym', 'arg1': '0', 'arg2': '1', 'lang': 'en'}
+>>> sorted_final_subset.shape
+(1133083, 4)
+>>> sorted_final_subset.to_csv('one_million_examples_four_cols.csv')
+Creating CSV from Arrow format: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1134/1134 [00:04<00:00, 270.63ba/s]
+46083584
+>>> import csv
+>>> import pandas as pd
+>>> c = pd.read_csv('one_million_examples_four_cols.csv')
+>>> c.to_c
+c.to_clipboard(  c.to_csv(        
+>>> c.to_csv('one_million_examples_four_cols.tsv', sep='\t', encoding='utf-8', index=False)
+>>> c.columns
+Index(['Unnamed: 0', 'rel', 'arg1', 'arg2', 'lang'], dtype='object')
+>>> c.drop('lang', in_place=True)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/util/_decorators.py", line 331, in wrapper
+    return func(*args, **kwargs)
+TypeError: drop() got an unexpected keyword argument 'in_place'
+>>> c.drop('lang', inplace=True)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/util/_decorators.py", line 331, in wrapper
+    return func(*args, **kwargs)
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/frame.py", line 5388, in drop
+    return super().drop(
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/util/_decorators.py", line 331, in wrapper
+    return func(*args, **kwargs)
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/generic.py", line 4505, in drop
+    obj = obj._drop_axis(labels, axis, level=level, errors=errors)
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/generic.py", line 4546, in _drop_axis
+    new_axis = axis.drop(labels, errors=errors)
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/indexes/base.py", line 6975, in drop
+    raise KeyError(f"{list(labels[mask])} not found in axis")
+KeyError: "['lang'] not found in axis"
+>>> c.drop('lang', axis=1, inplace=True)
+>>> c.columns
+Index(['Unnamed: 0', 'rel', 'arg1', 'arg2'], dtype='object')
+>>> c.to_csv('one_million_examples_four_cols.tsv', sep='\t', encoding='utf-8', index=False)
+>>> 
+KeyboardInterrupt
+>>> c[0]
+Traceback (most recent call last):
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/indexes/base.py", line 3803, in get_loc
+    return self._engine.get_loc(casted_key)
+  File "pandas/_libs/index.pyx", line 138, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 165, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 5745, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 5753, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: 0
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/frame.py", line 3804, in __getitem__
+    indexer = self.columns.get_loc(key)
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/indexes/base.py", line 3805, in get_loc
+    raise KeyError(key) from err
+KeyError: 0
+>>> c
+         Unnamed: 0          rel        arg1          arg2
+0                 0      antonym           0             1
+1                 1      antonym        pain      pleasure
+2                 2      antonym        pain           joy
+3                 3      antonym        pain  good_feeling
+4                 4      antonym        pain          good
+...             ...          ...         ...           ...
+1133078          78  has context  fire_drill            us
+1133079          79  has context  fire_eater    historical
+1133080          80  has context  fire_eater            us
+1133081          81  has context    fire_bay      military
+1133082          82  has context           𐑞       shavian
+
+[1133083 rows x 4 columns]
+>>> c['arg
+KeyboardInterrupt
+>>> def und(concept):
+...         concept = " ".join(list(filter(None, concept.split('_'))))
+...     return concept
+  File "<stdin>", line 3
+    return concept
+                 ^
+TabError: inconsistent use of tabs and spaces in indentation
+>>> def und(concept):
+...     concept = " ".join(list(filter(None, concept.split('_'))))
+...     return concept
+  File "<stdin>", line 3
+    return concept
+                 ^
+TabError: inconsistent use of tabs and spaces in indentation
+>>> def und(concept):
+...  concept = " ".join(list(filter(None, concept.split('_'))))
+...  return concept
+... 
+>>> c['arg1'] = c['arg1'].apply(und)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/series.py", line 4771, in apply
+    return SeriesApply(self, func, convert_dtype, args, kwargs).apply()
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/apply.py", line 1105, in apply
+    return self.apply_standard()
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/apply.py", line 1156, in apply_standard
+    mapped = lib.map_infer(
+  File "pandas/_libs/lib.pyx", line 2918, in pandas._libs.lib.map_infer
+  File "<stdin>", line 2, in und
+AttributeError: 'float' object has no attribute 'split'
+>>> def und(concept):
+...  concept=str(concept)
+...  concept = " ".join(list(filter(None, concept.split('_'))))
+...  return concept
+... 
+>>> c['arg1'] = c['arg1'].apply(und)
+>>> c
+         Unnamed: 0          rel        arg1          arg2
+0                 0      antonym           0             1
+1                 1      antonym        pain      pleasure
+2                 2      antonym        pain           joy
+3                 3      antonym        pain  good_feeling
+4                 4      antonym        pain          good
+...             ...          ...         ...           ...
+1133078          78  has context  fire drill            us
+1133079          79  has context  fire eater    historical
+1133080          80  has context  fire eater            us
+1133081          81  has context    fire bay      military
+1133082          82  has context           𐑞       shavian
+
+[1133083 rows x 4 columns]
+>>> c['arg2'] = c['arg2'].apply(und)
+>>> c
+         Unnamed: 0          rel        arg1          arg2
+0                 0      antonym           0             1
+1                 1      antonym        pain      pleasure
+2                 2      antonym        pain           joy
+3                 3      antonym        pain  good feeling
+4                 4      antonym        pain          good
+...             ...          ...         ...           ...
+1133078          78  has context  fire drill            us
+1133079          79  has context  fire eater    historical
+1133080          80  has context  fire eater            us
+1133081          81  has context    fire bay      military
+1133082          82  has context           𐑞       shavian
+
+[1133083 rows x 4 columns]
+>>> c.to_csv(
+KeyboardInterrupt
+>>> c.to_csv('one_million_examples_four_cols.tsv', sep='\t', encoding='utf-8', index=False)
+>>> filtered_data.to_
+filtered_data.to_csv(         filtered_data.to_dict(        filtered_data.to_json(        filtered_data.to_pandas(      filtered_data.to_parquet(     filtered_data.to_sql(         filtered_data.to_tf_dataset(  
+>>> filtered_data.to_pa
+filtered_data.to_pandas(   filtered_data.to_parquet(  
+>>> filtered_data.to_pandas(
+KeyboardInterrupt
+>>> final_subset = filtered_data.remove_columns(removed_cols)
+KeyboardInterrupt
+>>> removed_cols
+['sentence', 'full_rel', 'extra_info', 'weight']
+>>> help(filtered_data.to_pandas)
+
+>>> c
+         Unnamed: 0          rel        arg1          arg2
+0                 0      antonym           0             1
+1                 1      antonym        pain      pleasure
+2                 2      antonym        pain           joy
+3                 3      antonym        pain  good feeling
+4                 4      antonym        pain          good
+...             ...          ...         ...           ...
+1133078          78  has context  fire drill            us
+1133079          79  has context  fire eater    historical
+1133080          80  has context  fire eater            us
+1133081          81  has context    fire bay      military
+1133082          82  has context           𐑞       shavian
+
+[1133083 rows x 4 columns]
+>>> c.drop(
+KeyboardInterrupt
+>>> c.columns
+Index(['Unnamed: 0', 'rel', 'arg1', 'arg2'], dtype='object')
+>>> c.drop('Unnamed: 0', inplace=True)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/util/_decorators.py", line 331, in wrapper
+    return func(*args, **kwargs)
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/frame.py", line 5388, in drop
+    return super().drop(
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/util/_decorators.py", line 331, in wrapper
+    return func(*args, **kwargs)
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/generic.py", line 4505, in drop
+    obj = obj._drop_axis(labels, axis, level=level, errors=errors)
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/generic.py", line 4546, in _drop_axis
+    new_axis = axis.drop(labels, errors=errors)
+  File "/home/catalan/.virtualenvs/nlp/lib/python3.8/site-packages/pandas/core/indexes/base.py", line 6975, in drop
+    raise KeyError(f"{list(labels[mask])} not found in axis")
+KeyError: "['Unnamed: 0'] not found in axis"
+>>> c.drop('Unnamed: 0', inplace=True, axis=1)
+>>> c
+                 rel        arg1          arg2
+0            antonym           0             1
+1            antonym        pain      pleasure
+2            antonym        pain           joy
+3            antonym        pain  good feeling
+4            antonym        pain          good
+...              ...         ...           ...
+1133078  has context  fire drill            us
+1133079  has context  fire eater    historical
+1133080  has context  fire eater            us
+1133081  has context    fire bay      military
+1133082  has context           𐑞       shavian
+
+[1133083 rows x 3 columns]
+>>> c.columns
+Index(['rel', 'arg1', 'arg2'], dtype='object')
+>>> cols = ['arg1', 'rel', 'arg2']
+>>> c = c[cols]
+>>> c
+               arg1          rel          arg2
+0                 0      antonym             1
+1              pain      antonym      pleasure
+2              pain      antonym           joy
+3              pain      antonym  good feeling
+4              pain      antonym          good
+...             ...          ...           ...
+1133078  fire drill  has context            us
+1133079  fire eater  has context    historical
+1133080  fire eater  has context            us
+1133081    fire bay  has context      military
+1133082           𐑞  has context       shavian
+
+[1133083 rows x 3 columns]
+>>> outliers = final_subset.filter(lambda x: x['lang'] != 'en' and x['lang'] != 'en/sw.opencyc.org')
+KeyboardInterrupt
+>>> c.to_csv
+KeyboardInterrupt
+>>> c.to_csv('one_million_examples.tsv', sep='\t', encoding='utf-8', index=False)
+>>> 
+
