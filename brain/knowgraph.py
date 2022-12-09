@@ -8,6 +8,7 @@ from collections import Counter
 import wordsegment
 import pkuseg
 import numpy as np
+import pdb
 
 import os
 
@@ -16,7 +17,7 @@ if __name__ == "__main__":
         FILE_DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
         KGS = {
-            'ConceptNet': '../one_million_examples.tsv',
+            'ConceptNet': 'preprocess/conceptnet5/one_million_examples.tsv',
         }
 
         MAX_ENTITIES = 2
@@ -66,7 +67,7 @@ class KnowledgeGraph(object):
                     except:
                         print("[KnowledgeGraph] Bad spo:", line)
                     if self.predicate:
-                        value = pred + ' ' + obje
+                        value = pred + " " + obje
                     else:
                         value = obje
                     if subj in lookup_table.keys():
@@ -117,6 +118,7 @@ class KnowledgeGraph(object):
         # TODO: not grouping words by semantic unit
             # TODO: NER package, spacy, or look ahead in the sent_batch and use the longest matching subj in the KG
         split_sent = self.tokenize(sent_batch[0])
+        # TODO remove punctuation, lowercase everything
         know_sent_batch = []
         position_batch = []
         visible_matrix_batch = []
@@ -129,6 +131,7 @@ class KnowledgeGraph(object):
         pos_idx = -1
         abs_idx = -1
         abs_idx_src = []
+        pdb.set_trace()
         for token in split_sent:
 
             entities = list(self.lookup_table.get(token, []))[:max_entities]
@@ -160,17 +163,16 @@ class KnowledgeGraph(object):
         know_sent = []
         pos = []
         seg = []
+        pdb.set_trace()
         for i in range(len(sent_tree)):
             word = sent_tree[i][0]
             if word in self.special_tags:
                 know_sent += [word]
-                # seg += [0]
             else:
                 add_word = [word]
                 know_sent += add_word 
                 if len(add_word) > 1: raise Exception("Found anomaly")
             seg += [0]
-                # seg += [0] * len(add_word)
             pos += pos_idx_tree[i][0]
             for j in range(len(sent_tree[i][1])):
                 add_word = list(sent_tree[i][1][j])
@@ -182,28 +184,34 @@ class KnowledgeGraph(object):
 
         # Calculate visible matrix
         visible_matrix = np.zeros((token_num, token_num))
-        for item in abs_idx_tree:
-            src_ids = item[0]
-            for id in src_ids:
-                visible_abs_idx = abs_idx_src + [idx for ent in item[1] for idx in ent]
-                visible_matrix[id, visible_abs_idx] = 1
-            for ent in item[1]:
-                for id in ent:
-                    visible_abs_idx = ent + src_ids
+        pdb.set_trace()
+        try:
+            for item in abs_idx_tree:
+                src_ids = item[0]
+                for id in src_ids:
+                    visible_abs_idx = abs_idx_src + [idx for ent in item[1] for idx in ent]
                     visible_matrix[id, visible_abs_idx] = 1
+                for ent in item[1]:
+                    for id in ent:
+                        visible_abs_idx = ent + src_ids
+                        visible_matrix[id, visible_abs_idx] = 1
 
-        src_length = len(know_sent)
-        if len(know_sent) < max_length:
-            pad_num = max_length - src_length
-            know_sent += [config.PAD_TOKEN] * pad_num
-            seg += [0] * pad_num
-            pos += [max_length - 1] * pad_num
-            visible_matrix = np.pad(visible_matrix, ((0, pad_num), (0, pad_num)), 'constant')  # pad 0
-        else:
-            know_sent = know_sent[:max_length]
-            seg = seg[:max_length]
-            pos = pos[:max_length]
-            visible_matrix = visible_matrix[:max_length, :max_length]
+            src_length = len(know_sent)
+            if len(know_sent) < max_length:
+                pad_num = max_length - src_length
+                know_sent += [config.PAD_TOKEN] * pad_num
+                seg += [0] * pad_num
+                pos += [max_length - 1] * pad_num
+                visible_matrix = np.pad(visible_matrix, ((0, pad_num), (0, pad_num)), 'constant')  # pad 0
+            else:
+                know_sent = know_sent[:max_length]
+                seg = seg[:max_length]
+                pos = pos[:max_length]
+                visible_matrix = visible_matrix[:max_length, :max_length]
+        except IndexError as e:
+            print(e)
+            print(sent_batch)
+            print(split_sent)
         
         know_sent_batch.append(know_sent)
         position_batch.append(pos)
