@@ -1,2 +1,2 @@
 # coding: utf-8
-from brain.knowgraph import KnowledgeGraph, ChineseKG
+from brain.knowgraph import KnowledgeGraph
