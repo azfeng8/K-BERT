@@ -42,7 +42,6 @@ class BertClassifier(nn.Module):
         """
         # Embedding.
         emb = self.embedding(src, mask, pos)
-        print(f"embedding: {emb}")
         # Encoder.
         if not self.use_vm:
             vm = None
@@ -58,9 +57,7 @@ class BertClassifier(nn.Module):
         else:
             output = output[:, 0, :]
         output = torch.tanh(self.output_layer_1(output))
-        print(f"tanh output: {output}")
         logits = self.output_layer_2(output)
-        print(f"logits: {logits}")
         preds = self.softmax(logits.view(-1, self.labels_num))
         print("preds", preds)
         print("label", label)
