@@ -46,7 +46,6 @@ class BertClassifier(nn.Module):
         if not self.use_vm:
             vm = None
         output = self.encoder(emb, mask, vm)
-        print(f"encoder output: {output}")
         # Target.
         if self.pooling == "mean":
             output = torch.mean(output, dim=1)
