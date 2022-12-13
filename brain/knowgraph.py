@@ -81,25 +81,31 @@ class KnowledgeGraph(object):
             del lookup_table['arg1']
         return lookup_table
 
-    def tokenize(self, text):
+    def tokenize(self, text:str):
         """Tokenizer. Want to make tokens NEVER_SPLIT_TAG be parsed as a single token. Other words and numbers should be parsed
         according to vocab.txt and appearances in the ConceptNet KG."""
         expand_punc_regex = r"[a-zA-Z']+|[.,?!]|(\[CLS\])|(\[SEP\])|(\[PAD\])|(\[UNK\])|(\[MASK\])|(\[ENT\])|(\[SUB\])|(\[PRE\])|(\[OBJ\])"
         pattern = re.compile(expand_punc_regex)
         return (match.group(0) for match in pattern.finditer(text))
-
-    def entity_tokenize(self, text):
+    def t(self, text):
+        pat = r":|([a-zA-Z0-9']+)"
+        reg = re.compile(pat)
+        res = [m.group(0) for m in reg.finditer(text)]
+        return res
+    def entity_tokenize(self, text:str):
         """Returns an iterable (list or generator) of the text matched"""
-        reg = r":|([a-zA-Z0-9']+)" 
-        pattern = re.compile(reg)
-        res = [match.group(0) for match in pattern.finditer(text)]
+        # pat = r":|([a-zA-Z0-9']+)"
+        reg = re.compile(":|([a-zA-Z0-9']+)")
+        # res = [m.group(0) for m in reg.finditer(text)]
+        res = reg.findall(text)
         if len(res) > 0:
-            #TODO: search backwards
             # get everything after the last colon
             max_i = 0
             for i,t in enumerate(res):
                 if t == ":":
                     max_i = i
+            print(text)
+            print(res)
             return res[max_i:]
         else:
             return self.tokenize(text)
@@ -120,7 +126,6 @@ class KnowledgeGraph(object):
         wordsegment.UNIGRAMS.update(Counter(self.tokenize(self.text)))
         wordsegment.BIGRAMS.update(Counter(pairs(self.tokenize(self.text))))
         # print(f"After update, number unigrams: {len(wordsegment.UNIGRAMS)}, number bigrams: {len(wordsegment.BIGRAMS)}")
-
     def add_knowledge_with_vm(self, sent_batch, max_entities=config.MAX_ENTITIES, add_pad=True, max_length=128, trial=0):
         """
         Args:
@@ -136,6 +141,9 @@ class KnowledgeGraph(object):
         # TODO: not grouping words by semantic unit
             # TODO: NER package, spacy, or look ahead in the sent_batch and use the longest matching subj in the KG
         split_sent = self.tokenize(sent_batch[0])
+        s = [g for g in self.tokenize(sent_batch[0])]
+        np.savetxt("debug/split_sent.txt", np.array(s), fmt="%s")
+        # np.savetxt('debug/split_`ent.txt', np.array(split_sent), fmt="%s")
         # create tree
         sent_tree = []  # tuple of word, words from knowledge graph
         pos_idx_tree = []
@@ -147,10 +155,12 @@ class KnowledgeGraph(object):
         counter = 0
         counted = []
         e = []
+        # en = []
         for token in split_sent:
             counter += 1
             counted.append(token)
-            entities = sorted((self.lookup_table.get(token, [])))[:max_entities]
+            #TODO: list for now, but do set later for random sampling
+            entities = sorted(self.lookup_table.get(token, []))[:max_entities]
             e += entities
             sent_tree.append((token, entities))
 
@@ -161,6 +171,7 @@ class KnowledgeGraph(object):
             entities_abs_idx = []
             for ent in entities:
                 list_words_in_ent = list(self.entity_tokenize(ent))
+                # en += [ent, list_words_in_ent]
                 counter += len(list_words_in_ent)
                 counted += list_words_in_ent
                 ent_pos_idx = [token_pos_idx[-1] + i for i in range(1, len(list_words_in_ent)+1)]
@@ -172,6 +183,11 @@ class KnowledgeGraph(object):
             pos_idx = token_pos_idx[-1]
             abs_idx_tree.append((token_abs_idx, entities_abs_idx))
             abs_idx_src += token_abs_idx
+        print("Counter:", counter)
+        np.savetxt(f"debug/entities_{trial}.txt", np.array(e), fmt="%s")
+        np.savetxt("debug/counted.txt", np.array(counted), fmt="%s")
+        # print("ABS_IDX_SRC:", abs_idx_src)
+        np.savetxt("debug/abs_id_src.txt", np.array(abs_idx_src), fmt="%s")
         know_sent = []
         pos = []
         seg = []
@@ -198,6 +214,7 @@ class KnowledgeGraph(object):
         seg_batch = []
         token_num = len(know_sent)
 
+        np.savetxt("debug/know_sent.txt", np.array(know_sent), fmt="%s")
         # Calculate visible matrix
         visible_matrix = np.zeros((token_num, token_num))
         for item in abs_idx_tree:
@@ -233,10 +250,10 @@ class KnowledgeGraph(object):
 
         return know_sent_batch, position_batch, visible_matrix_batch, seg_batch
 
-if __name__ == "__main__":
-    sent_batch = " ".join(['[CLS]', 'Which', 'factor', 'will', 'most', 'likely', 'cause', 'a', 'person', 'to',
-              'develop', 'a', 'fever?', '[SEP]', 'a', 'leg', 'muscle', 'relaxing', 'after', 'exercise', '[SEP]'])
 
+if __name__ == "__main__":
+    s = ['[CLS] Rocks are classified as igneous, metamorphic, or sedimentary according to [SEP] their color [SEP]']
+    sent_batch = " ".join(s)
     trials = 1
     for j in range(trials):
         k = KnowledgeGraph(['ConceptNet'], predicate=True)
