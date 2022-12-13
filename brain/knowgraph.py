@@ -72,8 +72,10 @@ class KnowledgeGraph(object):
                         value = obje
                     if subj in lookup_table:
                         lookup_table[subj].add(value)
+                        # lookup_table[subj].append(value)
                     else:
                         lookup_table[subj] = set([value])
+                        # lookup_table[subj] = [value]
         # remove column labels
         if lookup_table.get('arg1'):
             del lookup_table['arg1']
@@ -235,7 +237,7 @@ if __name__ == "__main__":
     sent_batch = " ".join(['[CLS]', 'Which', 'factor', 'will', 'most', 'likely', 'cause', 'a', 'person', 'to',
               'develop', 'a', 'fever?', '[SEP]', 'a', 'leg', 'muscle', 'relaxing', 'after', 'exercise', '[SEP]'])
 
-    trials = 4
+    trials = 1
     for j in range(trials):
         k = KnowledgeGraph(['ConceptNet'], predicate=True)
         kn_s,p,v,s = k.add_knowledge_with_vm([sent_batch], trial=j)
