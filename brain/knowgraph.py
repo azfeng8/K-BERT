@@ -245,7 +245,7 @@ if __name__ == "__main__":
     sent_batch = " ".join(['[CLS]', 'Which', 'factor', 'will', 'most', 'likely', 'cause', 'a', 'person', 'to',
               'develop', 'a', 'fever?', '[SEP]', 'a', 'leg', 'muscle', 'relaxing', 'after', 'exercise', '[SEP]'])
 
-    trials = 50
+    trials = 2
     for j in range(trials):
         kn_s,p,v,s = k.add_knowledge_with_vm([sent_batch], trial=j)
     # print('k\n',k, 'p\n', p, 'v\n', v, 's\n', s)
