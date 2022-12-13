@@ -58,8 +58,6 @@ class BertClassifier(nn.Module):
         output = torch.tanh(self.output_layer_1(output))
         logits = self.output_layer_2(output)
         preds = self.softmax(logits.view(-1, self.labels_num))
-        print("preds", preds)
-        print("label", label)
         loss = self.criterion(preds, label.view(-1))
 
         return loss, logits
