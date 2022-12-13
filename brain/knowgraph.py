@@ -89,22 +89,15 @@ class KnowledgeGraph(object):
 
     def entity_tokenize(self, text:str):
         """Returns an iterable (list or generator) of the text matched"""
-        # pat = r":|([a-zA-Z0-9']+)"
-        # reg = re.compile(":|([a-zA-Z0-9']+)")
-        # res = [m.group(0) for m in reg.finditer(text)]
-        # res = reg.findall(text)
-        # if len(res) > 0:
-        #     # get everything after the last colon
-        #     max_i = 0
-        #     for i,t in enumerate(res):
-        #         if t == ":":
-        #             max_i = i
-        #     print(text)
-        #     print(res)
-        #     return res[max_i:]
-        # else:
-        #     return self.tokenize(text)
-        return text.split()
+        no_ws = text.split()
+        res = []
+        for word in no_ws:
+            if ":" in word:
+                w = word.split(":")[-1]
+                res.append(w)
+            else:
+                res.append(word)
+        return res
 
     def init_word_segmenter(self):
         """Update the default word segmenter with subjects in our KG.
