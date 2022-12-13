@@ -84,11 +84,11 @@ def add_knowledge_worker(params, verbose=True):
             question = line[1]
             answer = line[2]
             text = CLS_TOKEN + " " +  question +  " " + SEP_TOKEN +  " " + answer +  " " + SEP_TOKEN
-            try:
-                tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
-            except IndexError as e:
-                print(e)
-                print("Dataset sentence error:", [text])
+            # try:
+            tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
+            # except IndexError as e:
+            #     print(e)
+            #     print("Dataset sentence error:", [text])
             tokens = tokens[0]
             pos = pos[0]
             vm = vm[0].astype("bool")
