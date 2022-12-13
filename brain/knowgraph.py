@@ -179,7 +179,7 @@ class KnowledgeGraph(object):
             pos_idx = token_pos_idx[-1]
             abs_idx_tree.append((token_abs_idx, entities_abs_idx))
             abs_idx_src += token_abs_idx
-        print("Counter:", counter)
+        # print("Counter:", counter)
         np.savetxt(f"debug/entities_{trial}.txt", np.array(e), fmt="%s")
         np.savetxt("debug/counted.txt", np.array(counted), fmt="%s")
         # print("ABS_IDX_SRC:", abs_idx_src)
