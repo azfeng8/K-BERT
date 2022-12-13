@@ -134,9 +134,6 @@ class KnowledgeGraph(object):
         # TODO: not grouping words by semantic unit
             # TODO: NER package, spacy, or look ahead in the sent_batch and use the longest matching subj in the KG
         split_sent = self.tokenize(sent_batch[0])
-        s = [g for g in self.tokenize(sent_batch[0])]
-        np.savetxt("debug/split_sent.txt", np.array(s), fmt="%s")
-        # np.savetxt('debug/split_`ent.txt', np.array(split_sent), fmt="%s")
         # create tree
         sent_tree = []  # tuple of word, words from knowledge graph
         pos_idx_tree = []
@@ -173,11 +170,6 @@ class KnowledgeGraph(object):
             pos_idx = token_pos_idx[-1]
             abs_idx_tree.append((token_abs_idx, entities_abs_idx))
             abs_idx_src += token_abs_idx
-        print("Counter:", counter)
-        np.savetxt(f"debug/entities_{j}.txt", np.array(e), fmt="%s")
-        np.savetxt("debug/counted.txt", np.array(counted), fmt="%s")
-        # print("ABS_IDX_SRC:", abs_idx_src)
-        np.savetxt("debug/abs_id_src.txt", np.array(abs_idx_src), fmt="%s")
         know_sent = []
         pos = []
         seg = []
@@ -204,7 +196,6 @@ class KnowledgeGraph(object):
         seg_batch = []
         token_num = len(know_sent)
 
-        np.savetxt("debug/know_sent.txt", np.array(know_sent), fmt="%s")
         # Calculate visible matrix
         visible_matrix = np.zeros((token_num, token_num))
         for item in abs_idx_tree:
@@ -241,12 +232,12 @@ class KnowledgeGraph(object):
         return know_sent_batch, position_batch, visible_matrix_batch, seg_batch
 
 if __name__ == "__main__":
-    k = KnowledgeGraph(['ConceptNet'], predicate=True)
     sent_batch = " ".join(['[CLS]', 'Which', 'factor', 'will', 'most', 'likely', 'cause', 'a', 'person', 'to',
               'develop', 'a', 'fever?', '[SEP]', 'a', 'leg', 'muscle', 'relaxing', 'after', 'exercise', '[SEP]'])
 
-    trials = 2
+    trials = 4
     for j in range(trials):
+        k = KnowledgeGraph(['ConceptNet'], predicate=True)
         kn_s,p,v,s = k.add_knowledge_with_vm([sent_batch], trial=j)
     # print('k\n',k, 'p\n', p, 'v\n', v, 's\n', s)
     
