@@ -2,7 +2,6 @@
 """
   This script provides an k-BERT exmaple for classification.
 """
-import pdb
 import sys
 import torch
 import random
@@ -17,7 +16,6 @@ from uer.utils.config import load_hyperparam
 from uer.utils.seed import set_seed
 from uer.model_saver import save_model
 from brain import KnowledgeGraph
-from brain import ChineseKG
 from multiprocessing import Pool
 import numpy as np
 
