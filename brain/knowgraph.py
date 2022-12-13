@@ -257,6 +257,12 @@ if __name__ == "__main__":
     trials = 1
     for j in range(trials):
         k = KnowledgeGraph(['ConceptNet'], predicate=True)
-        kn_s,p,v,s = k.add_knowledge_with_vm([sent_batch], trial=j)
+        count = 0
+        try:
+            kn_s,p,v,s = k.add_knowledge_with_vm([sent_batch], trial=j)
+            count +=1 
+        except:
+            print(f'Which Sentence: {count}')
+        
     # print('k\n',k, 'p\n', p, 'v\n', v, 's\n', s)
     
