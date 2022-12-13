@@ -42,10 +42,12 @@ class BertClassifier(nn.Module):
         """
         # Embedding.
         emb = self.embedding(src, mask, pos)
+        print(f"embedding: {emb}")
         # Encoder.
         if not self.use_vm:
             vm = None
         output = self.encoder(emb, mask, vm)
+        print(f"encoder output: {output}")
         # Target.
         if self.pooling == "mean":
             output = torch.mean(output, dim=1)
@@ -56,8 +58,9 @@ class BertClassifier(nn.Module):
         else:
             output = output[:, 0, :]
         output = torch.tanh(self.output_layer_1(output))
+        print(f"tanh output: {output}")
         logits = self.output_layer_2(output)
-        print(logits)
+        print(f"logits: {logits}")
         preds = self.softmax(logits.view(-1, self.labels_num))
         print("preds", preds)
         print("label", label)
