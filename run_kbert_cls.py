@@ -84,8 +84,11 @@ def add_knowledge_worker(params, verbose=True):
             question = line[1]
             answer = line[2]
             text = CLS_TOKEN + " " +  question +  " " + SEP_TOKEN +  " " + answer +  " " + SEP_TOKEN
-            # pdb.set_trace()
-            tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
+            try:
+                tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
+            except IndexError as e:
+                print(e)
+                print("Dataset sentence error:", [text])
             tokens = tokens[0]
             pos = pos[0]
             vm = vm[0].astype("bool")
@@ -102,8 +105,6 @@ def add_knowledge_worker(params, verbose=True):
                     seg_tag += 1
             
             dataset.append((token_ids, label, mask, pos, vm, qid))
-            # if line_id == len(sentences) - 1:
-            #     # pdb.set_trace()
         else:
             if verbose: print("got unexpected input, ignoring", line)
     return dataset
