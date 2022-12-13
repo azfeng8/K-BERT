@@ -211,6 +211,9 @@ def main():
                 pass
     args.labels_num = len(labels_set) 
 
+    # Hardcode number of labels
+    args.labels_num = 2
+
     # Load vocabulary.
     vocab = Vocab()
     vocab.load(args.vocab_path)
