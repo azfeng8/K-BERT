@@ -198,10 +198,8 @@ class KnowledgeGraph(object):
         seg_batch = []
         token_num = len(know_sent)
 
-        print(know_sent_batch[0])
-
         # Calculate visible matrix
-        visible_matrix = np.zeros((token_num, token_num))
+        visible_matrix = np.zeros((token_num + 1, token_num + 1))
         for item in abs_idx_tree:
             src_ids = item[0]
             for id in src_ids:
