@@ -6,7 +6,6 @@ import re
 import pdb
 from collections import Counter
 import wordsegment
-import pkuseg
 import numpy as np
 import pdb
 
@@ -87,28 +86,25 @@ class KnowledgeGraph(object):
         expand_punc_regex = r"[a-zA-Z']+|[.,?!]|(\[CLS\])|(\[SEP\])|(\[PAD\])|(\[UNK\])|(\[MASK\])|(\[ENT\])|(\[SUB\])|(\[PRE\])|(\[OBJ\])"
         pattern = re.compile(expand_punc_regex)
         return (match.group(0) for match in pattern.finditer(text))
-    def t(self, text):
-        pat = r":|([a-zA-Z0-9']+)"
-        reg = re.compile(pat)
-        res = [m.group(0) for m in reg.finditer(text)]
-        return res
+
     def entity_tokenize(self, text:str):
         """Returns an iterable (list or generator) of the text matched"""
         # pat = r":|([a-zA-Z0-9']+)"
-        reg = re.compile(":|([a-zA-Z0-9']+)")
+        # reg = re.compile(":|([a-zA-Z0-9']+)")
         # res = [m.group(0) for m in reg.finditer(text)]
-        res = reg.findall(text)
-        if len(res) > 0:
-            # get everything after the last colon
-            max_i = 0
-            for i,t in enumerate(res):
-                if t == ":":
-                    max_i = i
-            print(text)
-            print(res)
-            return res[max_i:]
-        else:
-            return self.tokenize(text)
+        # res = reg.findall(text)
+        # if len(res) > 0:
+        #     # get everything after the last colon
+        #     max_i = 0
+        #     for i,t in enumerate(res):
+        #         if t == ":":
+        #             max_i = i
+        #     print(text)
+        #     print(res)
+        #     return res[max_i:]
+        # else:
+        #     return self.tokenize(text)
+        return text.split()
 
     def init_word_segmenter(self):
         """Update the default word segmenter with subjects in our KG.
