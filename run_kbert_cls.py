@@ -274,7 +274,6 @@ def main():
                 sentences.append(line)
         sentence_num = len(sentences)
 
-        # pdb.set_trace()
         print("There are {} sentence in total. We use {} processes to inject knowledge into sentences.".format(sentence_num, workers_num))
         if workers_num > 1:
             params = []
@@ -304,12 +303,11 @@ def main():
         label_ids = torch.LongTensor([sample[1] for sample in dataset])
         mask_ids = torch.LongTensor([sample[2] for sample in dataset])
         pos_ids = torch.LongTensor([example[3] for example in dataset])
-        # #TODO: make sure these are correct indices
-        sample = dataset[0]
-        print("elts in sample", len(sample))
-        print(label_ids)
-        print("IDX 1, label ids")
-        print(sample[1])
+        # sample = dataset[0]
+        # print("elts in sample", len(sample))
+        # print(label_ids)
+        # print("IDX 1, label ids")
+        # print(sample[1])
         vms = [example[4] for example in dataset]
 
         batch_size = args.batch_size
@@ -323,6 +321,7 @@ def main():
 
         model.eval()
         
+        pdb.set_trace()
         for i, (input_ids_batch, label_ids_batch,  mask_ids_batch, pos_ids_batch, vms_batch) in enumerate(batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vms)):
 
             # vms_batch = vms_batch.long()
@@ -342,10 +341,12 @@ def main():
                     print(input_ids_batch.size())
                     print(vms_batch)
                     print(vms_batch.size())
+                    print("loss", loss)
 
             logits = nn.Softmax(dim=1)(logits)
             pred = torch.argmax(logits, dim=1)
             gold = label_ids_batch
+            pdb.set_trace()
             for j in range(pred.size()[0]):
                 confusion[pred[j], gold[j]] += 1
             correct += torch.sum(pred == gold).item()
