@@ -70,11 +70,11 @@ class KnowledgeGraph(object):
                     else:
                         value = obje
                     if subj in lookup_table:
-                        # lookup_table[subj].add(value)
-                        lookup_table[subj].append(value)
+                        lookup_table[subj].add(value)
+                        # lookup_table[subj].append(value)
                     else:
-                        # lookup_table[subj] = set([value])
-                        lookup_table[subj] = [value]
+                        lookup_table[subj] = set([value])
+                        # lookup_table[subj] = [value]
         # remove column labels
         if lookup_table.get('arg1'):
             del lookup_table['arg1']
@@ -148,8 +148,7 @@ class KnowledgeGraph(object):
         for token in split_sent:
             counter += 1
             counted.append(token)
-            #TODO: list for now, but do set later for random sampling
-            entities = sorted(self.lookup_table.get(token, []))[:max_entities]
+            entities = list(self.lookup_table.get(token, []))[:max_entities]
             e += entities
             sent_tree.append((token, entities))
 

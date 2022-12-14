@@ -333,7 +333,7 @@ def main():
             with torch.no_grad():
                 try:
                     loss, logits = model(input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vms_batch)
-                    losses.append(loss)
+                    losses.append(loss.item())
                 except:
                     print(input_ids_batch)
                     print(input_ids_batch.size())
