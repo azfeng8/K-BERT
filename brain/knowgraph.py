@@ -131,7 +131,7 @@ class KnowledgeGraph(object):
             # TODO: NER package, spacy, or look ahead in the sent_batch and use the longest matching subj in the KG
         split_sent = self.tokenize(sent_batch[0])
         s = [g for g in self.tokenize(sent_batch[0])]
-        np.savetxt("debug/split_sent.txt", np.array(s), fmt="%s")
+        # np.savetxt("debug/split_sent.txt", np.array(s), fmt="%s")
         # np.savetxt('debug/split_`ent.txt', np.array(split_sent), fmt="%s")
         # create tree
         sent_tree = []  # tuple of word, words from knowledge graph
@@ -173,10 +173,10 @@ class KnowledgeGraph(object):
             abs_idx_tree.append((token_abs_idx, entities_abs_idx))
             abs_idx_src += token_abs_idx
         # print("Counter:", counter)
-        np.savetxt(f"debug/entities_{trial}.txt", np.array(e), fmt="%s")
-        np.savetxt("debug/counted.txt", np.array(counted), fmt="%s")
+        # np.savetxt(f"debug/entities_{trial}.txt", np.array(e), fmt="%s")
+        # np.savetxt("debug/counted.txt", np.array(counted), fmt="%s")
         # print("ABS_IDX_SRC:", abs_idx_src)
-        np.savetxt("debug/abs_id_src.txt", np.array(abs_idx_src), fmt="%s")
+        # np.savetxt("debug/abs_id_src.txt", np.array(abs_idx_src), fmt="%s")
         know_sent = []
         pos = []
         seg = []
@@ -203,7 +203,7 @@ class KnowledgeGraph(object):
         seg_batch = []
         token_num = len(know_sent)
 
-        np.savetxt("debug/know_sent.txt", np.array(know_sent), fmt="%s")
+        # np.savetxt("debug/know_sent.txt", np.array(know_sent), fmt="%s")
         # Calculate visible matrix
         visible_matrix = np.zeros((token_num, token_num))
         for item in abs_idx_tree:
