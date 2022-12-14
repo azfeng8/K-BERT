@@ -354,6 +354,8 @@ def main():
         plt.xlabel("Batch num")
         plt.ylabel("loss")
         plt.plot(np.arange(len(losses)), np.array(losses))
+        plt.savefig('eval_loss.png')
+        plt.show()
 
         print("confusion matrix:")
         print(confusion)
@@ -441,7 +443,6 @@ def main():
             loss.backward()
             optimizer.step()
 
-        # save_model(model, args.output_model_path)
         print("Start evaluation on dev dataset.")
         result = evaluate(args, False)
         if result > best_result:
@@ -456,6 +457,8 @@ def main():
     plt.figure()
     plt.title("Train loss over time (all epochs and batches)")
     plt.plot(np.arange((len(train_loss))), train_loss)
+    plt.savefig('train_loss.png')
+    plt.show()
     # Evaluation phase.
     print("Final evaluation on the test dataset.")
 
