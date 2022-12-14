@@ -2,12 +2,13 @@
 """
   This script provides an k-BERT exmaple for classification.
 """
-import pdb
+# import pdb
 import sys
 import torch
 import random
 import argparse
 import torch.nn as nn
+import matplotlib.pyplot as plt
 from uer.utils.vocab import Vocab
 from uer.utils.constants import *
 from uer.utils.tokenizer import * 
@@ -293,6 +294,7 @@ def main():
 
     # Evaluation function.
     def evaluate(args, is_test, metrics='Acc'):
+        losses = []
         if is_test:
             dataset = read_dataset(args.test_path, workers_num=args.workers_num)
         else:
@@ -303,11 +305,6 @@ def main():
         label_ids = torch.LongTensor([sample[1] for sample in dataset])
         mask_ids = torch.LongTensor([sample[2] for sample in dataset])
         pos_ids = torch.LongTensor([example[3] for example in dataset])
-        # sample = dataset[0]
-        # print("elts in sample", len(sample))
-        # print(label_ids)
-        # print("IDX 1, label ids")
-        # print(sample[1])
         vms = [example[4] for example in dataset]
 
         batch_size = args.batch_size
@@ -321,7 +318,7 @@ def main():
 
         model.eval()
         
-        pdb.set_trace()
+        # pdb.set_trace()
         for i, (input_ids_batch, label_ids_batch,  mask_ids_batch, pos_ids_batch, vms_batch) in enumerate(batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vms)):
 
             # vms_batch = vms_batch.long()
@@ -336,6 +333,7 @@ def main():
             with torch.no_grad():
                 try:
                     loss, logits = model(input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vms_batch)
+                    losses.append(loss)
                 except:
                     print(input_ids_batch)
                     print(input_ids_batch.size())
@@ -346,20 +344,28 @@ def main():
             logits = nn.Softmax(dim=1)(logits)
             pred = torch.argmax(logits, dim=1)
             gold = label_ids_batch
-            pdb.set_trace()
+            # pdb.set_trace()
             for j in range(pred.size()[0]):
                 confusion[pred[j], gold[j]] += 1
             correct += torch.sum(pred == gold).item()
     
-        # if is_test:
-        print("label ids batch:")
-        print(label_ids_batch)
+        plt.figure()
+        plt.title("Evaluation: loss over time")
+        plt.xlabel("Batch num")
+        plt.ylabel("loss")
+        plt.plot(np.arange(len(losses)), np.array(losses))
+
         print("confusion matrix:")
         print(confusion)
         print("Report precision, recall, and f1:")
         
         for i in range(confusion.size()[0]):
-            p = confusion[i,i].item()/confusion[i,:].sum().item()
+            pred_1 = confusion[i,:].sum().item()
+            if np.isclose(pred_1, 0):
+                print("Warning: All predictions are 0, can't comput precision score")
+                p = np.nan
+            else:
+                p = confusion[i,i].item()/pred_1
             r = confusion[i,i].item()/confusion[:,i].sum().item()
             f1 = 2*p*r / (p+r)
             if i == 1:
@@ -372,7 +378,6 @@ def main():
             return label_1_f1
         else:
             return correct/len(dataset)
-            # If do MRR, add later
     # Training phase.
     print("Start training.")
     trainset = read_dataset(args.train_path, workers_num=args.workers_num)
@@ -410,6 +415,7 @@ def main():
     result = 0.0
     best_result = 0.0
     
+    train_loss = []
     for epoch in range(1, args.epochs_num+1):
         model.train()
         for i, (input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vms_batch) in enumerate(batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vms)):
@@ -426,6 +432,7 @@ def main():
             loss, _ = model(input_ids_batch, label_ids_batch, mask_ids_batch, pos=pos_ids_batch, vm=vms_batch)
             if torch.cuda.device_count() > 1:
                 loss = torch.mean(loss)
+            train_loss.append(loss.item())
             total_loss += loss.item()
             if (i + 1) % args.report_steps == 0:
                 print("Epoch id: {}, Training steps: {}, Avg loss: {:.3f}".format(epoch, i+1, total_loss / args.report_steps))
@@ -436,7 +443,6 @@ def main():
 
         # save_model(model, args.output_model_path)
         print("Start evaluation on dev dataset.")
-        # pdb.set_trace()
         result = evaluate(args, False)
         if result > best_result:
             best_result = result
@@ -447,6 +453,9 @@ def main():
         print("Start evaluation on test dataset.")
         evaluate(args, True)
 
+    plt.figure()
+    plt.title("Train loss over time (all epochs and batches)")
+    plt.plot(np.arange((len(train_loss))), train_loss)
     # Evaluation phase.
     print("Final evaluation on the test dataset.")
 
