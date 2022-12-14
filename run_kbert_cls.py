@@ -2,6 +2,7 @@
 """
   This script provides an k-BERT exmaple for classification.
 """
+import pdb
 import sys
 import torch
 import random
@@ -74,7 +75,7 @@ def add_knowledge_worker(params, verbose=True):
             sys.stdout.flush()
         line = line.strip().split('\t')
         if len(line) == 4:
-            # Original NLPCC-DBQA does exactly this
+            # Original NLPCC-DBQA does similar to this
             # ID (str), Question (str), answer (str), label (0 or 1)
             qid=int(line_id)
             label = int(line[3])
@@ -258,7 +259,7 @@ def main():
         spo_files = [args.kg_name]
 
     if args.lang == "zh":
-        kg = ChineseKG(spo_files=spo_files, predicate=True)
+        raise Exception("Deprecated, removed Chinese version") 
     else:
         kg = KnowledgeGraph(spo_files=spo_files, predicate=True)
 
@@ -298,10 +299,17 @@ def main():
         else:
             dataset = read_dataset(args.dev_path, workers_num=args.workers_num)
 
+        #TODO: this is faster in one for loop
         input_ids = torch.LongTensor([sample[0] for sample in dataset])
         label_ids = torch.LongTensor([sample[1] for sample in dataset])
         mask_ids = torch.LongTensor([sample[2] for sample in dataset])
         pos_ids = torch.LongTensor([example[3] for example in dataset])
+        # #TODO: make sure these are correct indices
+        sample = dataset[0]
+        print("elts in sample", len(sample))
+        print(label_ids)
+        print("IDX 1, label ids")
+        print(sample[1])
         vms = [example[4] for example in dataset]
 
         batch_size = args.batch_size
@@ -342,10 +350,12 @@ def main():
                 confusion[pred[j], gold[j]] += 1
             correct += torch.sum(pred == gold).item()
     
-        if is_test:
-            print("Confusion matrix:")
-            print(confusion)
-            print("Report precision, recall, and f1:")
+        # if is_test:
+        print("label ids batch:")
+        print(label_ids_batch)
+        print("confusion matrix:")
+        print(confusion)
+        print("Report precision, recall, and f1:")
         
         for i in range(confusion.size()[0]):
             p = confusion[i,i].item()/confusion[i,:].sum().item()
@@ -423,7 +433,9 @@ def main():
             loss.backward()
             optimizer.step()
 
+        # save_model(model, args.output_model_path)
         print("Start evaluation on dev dataset.")
+        # pdb.set_trace()
         result = evaluate(args, False)
         if result > best_result:
             best_result = result
@@ -443,6 +455,9 @@ def main():
         model.load_state_dict(torch.load(args.output_model_path))
     evaluate(args, True)
 
+# def debug(path):
+#     model = build_model(path)
+#     evaluate(get_args())
 
 if __name__ == "__main__":
     main()
