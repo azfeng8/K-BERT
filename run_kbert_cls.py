@@ -21,6 +21,12 @@ from brain import KnowledgeGraph
 from multiprocessing import Pool
 import numpy as np
 
+
+# Supress warnings
+import warnings
+warnings.filterwarnings("ignore")
+
+
 class BertClassifier(nn.Module):
     def __init__(self, args, model):
         super(BertClassifier, self).__init__()
@@ -183,6 +189,13 @@ def main():
     parser.add_argument("--no_vm", action="store_true", help="Disable the visible_matrix")
     parser.add_argument("--lang", choices=["zh", "en"], help="Language to use for tokenizer")
 
+
+    # Options for saving and loading model to resume training.abs(
+    parser.add_argument("--load_model_path", default=None, type=str,
+                        help="Path to save model for training.")
+    parser.add_argument("--save_model_path", default=None, type=str,
+                        help="Path to load model for training.")
+
     args = parser.parse_args()
 
     # Load the hyperparameters from the config file.
@@ -221,10 +234,16 @@ def main():
     model = build_model(args)
 
     # Load or initialize parameters.
+    if args.pretrained_model_path:
+        print(f"Initializing model from pretrained model from {args.pretrained_model_path}")
         # Initialize with pretrained model.
-    model.load_state_dict(torch.load(args.pretrained_model_path), strict=False)  
-    # Build classification model.
-    model = BertClassifier(args, model)
+        model.load_state_dict(torch.load(args.pretrained_model_path), strict=False)  
+        # Build classification model.
+        model = BertClassifier(args, model)
+    
+    if args.load_model_path:
+        print(f"Loading saved model from {args.load_model_path}")
+        model = torch.load(args.load_model_path)
 
     # For simplicity, we use DataParallel wrapper to use multiple GPUs.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -420,6 +439,7 @@ def main():
     train_loss = []
     for epoch in range(1, args.epochs_num+1):
         model.train()
+        epoch_loss = []
         for i, (input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vms_batch) in enumerate(batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vms)):
             model.zero_grad()
 
@@ -434,7 +454,7 @@ def main():
             loss, _ = model(input_ids_batch, label_ids_batch, mask_ids_batch, pos=pos_ids_batch, vm=vms_batch)
             if torch.cuda.device_count() > 1:
                 loss = torch.mean(loss)
-            train_loss.append(loss.item())
+            epoch_loss.append(loss.item())
             total_loss += loss.item()
             if (i + 1) % args.report_steps == 0:
                 print("Epoch id: {}, Training steps: {}, Avg loss: {:.3f}".format(epoch, i+1, total_loss / args.report_steps))
@@ -443,6 +463,8 @@ def main():
             loss.backward()
             optimizer.step()
 
+        train_loss.append(epoch_loss)
+
         print("Start evaluation on dev dataset.")
         result = evaluate(args, False)
         if result > best_result:
@@ -450,15 +472,24 @@ def main():
             save_model(model, args.output_model_path)
         else:
             continue
+        
+        # Skip evaluation on test during training (there's a final test eval at the end)
+        # print("Start evaluation on test dataset.")
+        # evaluate(args, True)
 
-        print("Start evaluation on test dataset.")
-        evaluate(args, True)
+    # Save model
+    if args.save_model_path:
+        print(f"Saving model to {args.save_model_path}")
+        torch.save(model, args.save_model_path)
+        print(f"Saving training losses to {args.save_model_path[:-3]}_losses.pt")
+        torch.save(train_loss, f"{args.save_model_path[:-3]}_losses.pt")
+    
+    # plt.figure()
+    # plt.title("Train loss over time (all epochs and batches)")
+    # plt.plot(np.arange((len(train_loss))), train_loss)
+    # plt.savefig('train_loss.png')
+    # plt.show()
 
-    plt.figure()
-    plt.title("Train loss over time (all epochs and batches)")
-    plt.plot(np.arange((len(train_loss))), train_loss)
-    plt.savefig('train_loss.png')
-    plt.show()
     # Evaluation phase.
     print("Final evaluation on the test dataset.")
 
