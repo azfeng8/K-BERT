@@ -3,13 +3,10 @@
 KnowledgeGraph
 """
 import re
-import pdb
-from collections import Counter
-import wordsegment
 import numpy as np
-import pdb
 
 import os
+
 
 if __name__ == "__main__":
     class config:
@@ -50,9 +47,6 @@ class KnowledgeGraph(object):
         self.lookup_table = self._create_lookup_table()
         self.segment_vocab = list(self.lookup_table.keys()) + config.NEVER_SPLIT_TAG
         self.text = " ".join(self.segment_vocab)
-        wordsegment.load()
-        # print(f"Before update, default word segmenter. num unigrams: {len(wordsegment.UNIGRAMS)}, num bigrams: {len(wordsegment.BIGRAMS)}")
-        self.init_word_segmenter()
         self.special_tags = set(config.NEVER_SPLIT_TAG)
 
     def _create_lookup_table(self):
@@ -71,10 +65,8 @@ class KnowledgeGraph(object):
                         value = obje
                     if subj in lookup_table:
                         lookup_table[subj].add(value)
-                        # lookup_table[subj].append(value)
                     else:
                         lookup_table[subj] = set([value])
-                        # lookup_table[subj] = [value]
         # remove column labels
         if lookup_table.get('arg1'):
             del lookup_table['arg1']
@@ -99,22 +91,6 @@ class KnowledgeGraph(object):
                 res.append(word)
         return res
 
-    def init_word_segmenter(self):
-        """Update the default word segmenter with subjects in our KG.
-        
-        # https://grantjenks.com/docs/wordsegment/using-a-different-corpus.html
-        """
-        def pairs(iterable):
-            iterator = iter(iterable)
-            values = [next(iterator)]
-            for value in iterator:
-                values.append(value)
-                yield ' '.join(values)
-                del values[0]
-
-        wordsegment.UNIGRAMS.update(Counter(self.tokenize(self.text)))
-        wordsegment.BIGRAMS.update(Counter(pairs(self.tokenize(self.text))))
-        # print(f"After update, number unigrams: {len(wordsegment.UNIGRAMS)}, number bigrams: {len(wordsegment.BIGRAMS)}")
     def add_knowledge_with_vm(self, sent_batch, max_entities=config.MAX_ENTITIES, add_pad=True, max_length=128, trial=0):
         """
         Args:
@@ -130,9 +106,6 @@ class KnowledgeGraph(object):
         # TODO: not grouping words by semantic unit
             # TODO: NER package, spacy, or look ahead in the sent_batch and use the longest matching subj in the KG
         split_sent = self.tokenize(sent_batch[0])
-        s = [g for g in self.tokenize(sent_batch[0])]
-        # np.savetxt("debug/split_sent.txt", np.array(s), fmt="%s")
-        # np.savetxt('debug/split_`ent.txt', np.array(split_sent), fmt="%s")
         # create tree
         sent_tree = []  # tuple of word, words from knowledge graph
         pos_idx_tree = []
@@ -141,15 +114,10 @@ class KnowledgeGraph(object):
         abs_idx = -1
         abs_idx_src = []
         split_sent = self.tokenize(sent_batch[0])
-        counter = 0
-        counted = []
-        e = []
-        # en = []
         for token in split_sent:
-            counter += 1
-            counted.append(token)
-            entities = list(self.lookup_table.get(token, []))[:max_entities]
-            e += entities
+            #TODO: add filter step before truncate to max_entities len
+            filt_list = list(self.lookup_table.get(token, []))
+            entities = filt_list[:max_entities]
             sent_tree.append((token, entities))
 
             token_pos_idx = [pos_idx +1]
@@ -159,9 +127,6 @@ class KnowledgeGraph(object):
             entities_abs_idx = []
             for ent in entities:
                 list_words_in_ent = list(self.entity_tokenize(ent))
-                # en += [ent, list_words_in_ent]
-                counter += len(list_words_in_ent)
-                counted += list_words_in_ent
                 ent_pos_idx = [token_pos_idx[-1] + i for i in range(1, len(list_words_in_ent)+1)]
                 entities_pos_idx.append(ent_pos_idx)
                 ent_abs_idx = [abs_idx + i for i in range(1, len(list_words_in_ent)+1)]
@@ -171,11 +136,6 @@ class KnowledgeGraph(object):
             pos_idx = token_pos_idx[-1]
             abs_idx_tree.append((token_abs_idx, entities_abs_idx))
             abs_idx_src += token_abs_idx
-        # print("Counter:", counter)
-        # np.savetxt(f"debug/entities_{trial}.txt", np.array(e), fmt="%s")
-        # np.savetxt("debug/counted.txt", np.array(counted), fmt="%s")
-        # print("ABS_IDX_SRC:", abs_idx_src)
-        # np.savetxt("debug/abs_id_src.txt", np.array(abs_idx_src), fmt="%s")
         know_sent = []
         pos = []
         seg = []
@@ -202,15 +162,12 @@ class KnowledgeGraph(object):
         seg_batch = []
         token_num = len(know_sent)
 
-        # np.savetxt("debug/know_sent.txt", np.array(know_sent), fmt="%s")
         # Calculate visible matrix
         visible_matrix = np.zeros((token_num, token_num))
         for item in abs_idx_tree:
             src_ids = item[0]
             for id in src_ids:
-                # print("SECOND PART", [idx for ent in item[1] for idx in ent])
                 visible_abs_idx = abs_idx_src + [idx for ent in item[1] for idx in ent]
-                # print("VISIBLE_ABS_IDX", visible_abs_idx)
                 visible_matrix[id, visible_abs_idx] = 1
             for ent in item[1]:
                 for id in ent:
