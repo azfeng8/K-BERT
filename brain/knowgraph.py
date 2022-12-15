@@ -3,14 +3,10 @@
 KnowledgeGraph
 """
 import re
-import pdb
-from collections import Counter
-import wordsegment
-import pkuseg
 import numpy as np
-import pdb
 
 import os
+
 
 if __name__ == "__main__":
     class config:
@@ -51,9 +47,6 @@ class KnowledgeGraph(object):
         self.lookup_table = self._create_lookup_table()
         self.segment_vocab = list(self.lookup_table.keys()) + config.NEVER_SPLIT_TAG
         self.text = " ".join(self.segment_vocab)
-        wordsegment.load()
-        # print(f"Before update, default word segmenter. num unigrams: {len(wordsegment.UNIGRAMS)}, num bigrams: {len(wordsegment.BIGRAMS)}")
-        self.init_word_segmenter()
         self.special_tags = set(config.NEVER_SPLIT_TAG)
 
     def _create_lookup_table(self):
@@ -71,55 +64,32 @@ class KnowledgeGraph(object):
                     else:
                         value = obje
                     if subj in lookup_table:
-                        # lookup_table[subj].add(value)
-                        lookup_table[subj].append(value)
+                        lookup_table[subj].add(value)
                     else:
-                        # lookup_table[subj] = set([value])
-                        lookup_table[subj] = [value]
+                        lookup_table[subj] = set([value])
         # remove column labels
         if lookup_table.get('arg1'):
             del lookup_table['arg1']
         return lookup_table
 
-    def tokenize(self, text):
+    def tokenize(self, text:str):
         """Tokenizer. Want to make tokens NEVER_SPLIT_TAG be parsed as a single token. Other words and numbers should be parsed
         according to vocab.txt and appearances in the ConceptNet KG."""
         expand_punc_regex = r"[a-zA-Z']+|[.,?!]|(\[CLS\])|(\[SEP\])|(\[PAD\])|(\[UNK\])|(\[MASK\])|(\[ENT\])|(\[SUB\])|(\[PRE\])|(\[OBJ\])"
         pattern = re.compile(expand_punc_regex)
         return (match.group(0) for match in pattern.finditer(text))
 
-    def entity_tokenize(self, text):
+    def entity_tokenize(self, text:str):
         """Returns an iterable (list or generator) of the text matched"""
-        reg = r":|([a-zA-Z0-9']+)" 
-        pattern = re.compile(reg)
-        res = [match.group(0) for match in pattern.finditer(text)]
-        if len(res) > 0:
-            #TODO: search backwards
-            # get everything after the last colon
-            max_i = 0
-            for i,t in enumerate(res):
-                if t == ":":
-                    max_i = i
-            return res[max_i:]
-        else:
-            return self.tokenize(text)
-
-    def init_word_segmenter(self):
-        """Update the default word segmenter with subjects in our KG.
-        
-        # https://grantjenks.com/docs/wordsegment/using-a-different-corpus.html
-        """
-        def pairs(iterable):
-            iterator = iter(iterable)
-            values = [next(iterator)]
-            for value in iterator:
-                values.append(value)
-                yield ' '.join(values)
-                del values[0]
-
-        wordsegment.UNIGRAMS.update(Counter(self.tokenize(self.text)))
-        wordsegment.BIGRAMS.update(Counter(pairs(self.tokenize(self.text))))
-        # print(f"After update, number unigrams: {len(wordsegment.UNIGRAMS)}, number bigrams: {len(wordsegment.BIGRAMS)}")
+        no_ws = text.split()
+        res = []
+        for word in no_ws:
+            if ":" in word:
+                w = word.split(":")[-1]
+                res.append(w)
+            else:
+                res.append(word)
+        return res
 
     def add_knowledge_with_vm(self, sent_batch, max_entities=config.MAX_ENTITIES, add_pad=True, max_length=128, trial=0):
         """
@@ -144,14 +114,10 @@ class KnowledgeGraph(object):
         abs_idx = -1
         abs_idx_src = []
         split_sent = self.tokenize(sent_batch[0])
-        counter = 0
-        counted = []
-        e = []
         for token in split_sent:
-            counter += 1
-            counted.append(token)
-            entities = sorted((self.lookup_table.get(token, [])))[:max_entities]
-            e += entities
+            #TODO: add filter step before truncate to max_entities len
+            filt_list = list(self.lookup_table.get(token, []))
+            entities = filt_list[:max_entities]
             sent_tree.append((token, entities))
 
             token_pos_idx = [pos_idx +1]
@@ -161,8 +127,6 @@ class KnowledgeGraph(object):
             entities_abs_idx = []
             for ent in entities:
                 list_words_in_ent = list(self.entity_tokenize(ent))
-                counter += len(list_words_in_ent)
-                counted += list_words_in_ent
                 ent_pos_idx = [token_pos_idx[-1] + i for i in range(1, len(list_words_in_ent)+1)]
                 entities_pos_idx.append(ent_pos_idx)
                 ent_abs_idx = [abs_idx + i for i in range(1, len(list_words_in_ent)+1)]
@@ -203,9 +167,7 @@ class KnowledgeGraph(object):
         for item in abs_idx_tree:
             src_ids = item[0]
             for id in src_ids:
-                # print("SECOND PART", [idx for ent in item[1] for idx in ent])
                 visible_abs_idx = abs_idx_src + [idx for ent in item[1] for idx in ent]
-                # print("VISIBLE_ABS_IDX", visible_abs_idx)
                 visible_matrix[id, visible_abs_idx] = 1
             for ent in item[1]:
                 for id in ent:
@@ -233,13 +195,19 @@ class KnowledgeGraph(object):
 
         return know_sent_batch, position_batch, visible_matrix_batch, seg_batch
 
-if __name__ == "__main__":
-    sent_batch = " ".join(['[CLS]', 'Which', 'factor', 'will', 'most', 'likely', 'cause', 'a', 'person', 'to',
-              'develop', 'a', 'fever?', '[SEP]', 'a', 'leg', 'muscle', 'relaxing', 'after', 'exercise', '[SEP]'])
 
+if __name__ == "__main__":
+    s = ['[CLS] Rocks are classified as igneous, metamorphic, or sedimentary according to [SEP] their color [SEP]']
+    sent_batch = " ".join(s)
     trials = 1
     for j in range(trials):
         k = KnowledgeGraph(['ConceptNet'], predicate=True)
-        kn_s,p,v,s = k.add_knowledge_with_vm([sent_batch], trial=j)
+        count = 0
+        try:
+            kn_s,p,v,s = k.add_knowledge_with_vm([sent_batch], trial=j)
+            count +=1 
+        except:
+            print(f'Which Sentence: {count}')
+        
     # print('k\n',k, 'p\n', p, 'v\n', v, 's\n', s)
     

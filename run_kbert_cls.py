@@ -2,11 +2,13 @@
 """
   This script provides an k-BERT exmaple for classification.
 """
+# import pdb
 import sys
 import torch
 import random
 import argparse
 import torch.nn as nn
+import matplotlib.pyplot as plt
 from uer.utils.vocab import Vocab
 from uer.utils.constants import *
 from uer.utils.tokenizer import * 
@@ -57,10 +59,7 @@ class BertClassifier(nn.Module):
             output = output[:, 0, :]
         output = torch.tanh(self.output_layer_1(output))
         logits = self.output_layer_2(output)
-        print(logits)
         preds = self.softmax(logits.view(-1, self.labels_num))
-        print("preds", preds)
-        print("label", label)
         loss = self.criterion(preds, label.view(-1))
 
         return loss, logits
@@ -77,7 +76,7 @@ def add_knowledge_worker(params, verbose=True):
             sys.stdout.flush()
         line = line.strip().split('\t')
         if len(line) == 4:
-            # Original NLPCC-DBQA does exactly this
+            # Original NLPCC-DBQA does similar to this
             # ID (str), Question (str), answer (str), label (0 or 1)
             qid=int(line_id)
             label = int(line[3])
@@ -208,6 +207,9 @@ def main():
                 pass
     args.labels_num = len(labels_set) 
 
+    # Hardcode number of labels
+    args.labels_num = 2
+
     # Load vocabulary.
     vocab = Vocab()
     vocab.load(args.vocab_path)
@@ -258,7 +260,7 @@ def main():
         spo_files = [args.kg_name]
 
     if args.lang == "zh":
-        kg = ChineseKG(spo_files=spo_files, predicate=True)
+        raise Exception("Deprecated, removed Chinese version") 
     else:
         kg = KnowledgeGraph(spo_files=spo_files, predicate=True)
 
@@ -273,7 +275,6 @@ def main():
                 sentences.append(line)
         sentence_num = len(sentences)
 
-        # pdb.set_trace()
         print("There are {} sentence in total. We use {} processes to inject knowledge into sentences.".format(sentence_num, workers_num))
         if workers_num > 1:
             params = []
@@ -293,11 +294,13 @@ def main():
 
     # Evaluation function.
     def evaluate(args, is_test, metrics='Acc'):
+        losses = []
         if is_test:
             dataset = read_dataset(args.test_path, workers_num=args.workers_num)
         else:
             dataset = read_dataset(args.dev_path, workers_num=args.workers_num)
 
+        #TODO: this is faster in one for loop
         input_ids = torch.LongTensor([sample[0] for sample in dataset])
         label_ids = torch.LongTensor([sample[1] for sample in dataset])
         mask_ids = torch.LongTensor([sample[2] for sample in dataset])
@@ -315,6 +318,7 @@ def main():
 
         model.eval()
         
+        # pdb.set_trace()
         for i, (input_ids_batch, label_ids_batch,  mask_ids_batch, pos_ids_batch, vms_batch) in enumerate(batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vms)):
 
             # vms_batch = vms_batch.long()
@@ -329,26 +333,41 @@ def main():
             with torch.no_grad():
                 try:
                     loss, logits = model(input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vms_batch)
+                    losses.append(loss.item())
                 except:
                     print(input_ids_batch)
                     print(input_ids_batch.size())
                     print(vms_batch)
                     print(vms_batch.size())
+                    print("loss", loss)
 
             logits = nn.Softmax(dim=1)(logits)
             pred = torch.argmax(logits, dim=1)
             gold = label_ids_batch
+            # pdb.set_trace()
             for j in range(pred.size()[0]):
                 confusion[pred[j], gold[j]] += 1
             correct += torch.sum(pred == gold).item()
     
-        if is_test:
-            print("Confusion matrix:")
-            print(confusion)
-            print("Report precision, recall, and f1:")
+        plt.figure()
+        plt.title("Evaluation: loss over time")
+        plt.xlabel("Batch num")
+        plt.ylabel("loss")
+        plt.plot(np.arange(len(losses)), np.array(losses))
+        plt.savefig('eval_loss.png')
+        plt.show()
+
+        print("confusion matrix:")
+        print(confusion)
+        print("Report precision, recall, and f1:")
         
         for i in range(confusion.size()[0]):
-            p = confusion[i,i].item()/confusion[i,:].sum().item()
+            pred_1 = confusion[i,:].sum().item()
+            if np.isclose(pred_1, 0):
+                print("Warning: All predictions are 0, can't comput precision score")
+                p = np.nan
+            else:
+                p = confusion[i,i].item()/pred_1
             r = confusion[i,i].item()/confusion[:,i].sum().item()
             f1 = 2*p*r / (p+r)
             if i == 1:
@@ -361,7 +380,6 @@ def main():
             return label_1_f1
         else:
             return correct/len(dataset)
-            # If do MRR, add later
     # Training phase.
     print("Start training.")
     trainset = read_dataset(args.train_path, workers_num=args.workers_num)
@@ -399,6 +417,7 @@ def main():
     result = 0.0
     best_result = 0.0
     
+    train_loss = []
     for epoch in range(1, args.epochs_num+1):
         model.train()
         for i, (input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vms_batch) in enumerate(batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vms)):
@@ -415,6 +434,7 @@ def main():
             loss, _ = model(input_ids_batch, label_ids_batch, mask_ids_batch, pos=pos_ids_batch, vm=vms_batch)
             if torch.cuda.device_count() > 1:
                 loss = torch.mean(loss)
+            train_loss.append(loss.item())
             total_loss += loss.item()
             if (i + 1) % args.report_steps == 0:
                 print("Epoch id: {}, Training steps: {}, Avg loss: {:.3f}".format(epoch, i+1, total_loss / args.report_steps))
@@ -434,6 +454,11 @@ def main():
         print("Start evaluation on test dataset.")
         evaluate(args, True)
 
+    plt.figure()
+    plt.title("Train loss over time (all epochs and batches)")
+    plt.plot(np.arange((len(train_loss))), train_loss)
+    plt.savefig('train_loss.png')
+    plt.show()
     # Evaluation phase.
     print("Final evaluation on the test dataset.")
 
@@ -443,6 +468,9 @@ def main():
         model.load_state_dict(torch.load(args.output_model_path))
     evaluate(args, True)
 
+# def debug(path):
+#     model = build_model(path)
+#     evaluate(get_args())
 
 if __name__ == "__main__":
     main()
