@@ -7,6 +7,7 @@ KGS = {
     'HowNet': os.path.join(FILE_DIR_PATH, 'kgs/HowNet.spo'),
     'CnDbpedia': '../drive/MyDrive/nlp-project/K-BERT-original/CnDbpedia.spo',
     'ConceptNet': '/content/drive/MyDrive/nlp-project/knowgraphs/ConceptNet5/cleaned_kg.tsv',
+    'Empty': '/content/drive/MyDrive/nlp-project/knowgraphs/ConceptNet5/test.tsv',
     'Medical': os.path.join(FILE_DIR_PATH, 'kgs/Medical.spo'),
 }
 

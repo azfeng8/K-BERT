@@ -473,8 +473,7 @@ def main():
             save_model(model, args.output_model_path)
         else:
             continue
-
-        print("Evaluation on test dataset.")
+        print("Start evaluation on test dataset.")
         evaluate(args, True)
         
     # Save model
