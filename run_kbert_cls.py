@@ -190,11 +190,13 @@ def main():
     parser.add_argument("--lang", choices=["zh", "en"], help="Language to use for tokenizer")
 
 
-    # Options for saving and loading model to resume training.abs(
+    # Options for saving and loading model to resume training
     parser.add_argument("--load_model_path", default=None, type=str,
                         help="Path to save model for training.")
     parser.add_argument("--save_model_path", default=None, type=str,
                         help="Path to load model for training.")
+    parser.add_argument("--test_only", action="store_true",
+                        help="Only run code to evaluate model")
 
     args = parser.parse_args()
 
@@ -400,6 +402,16 @@ def main():
         else:
             return correct/len(dataset)
     # Training phase.
+
+    if args.test_only:
+        print("Evaluating on the test dataset.")
+        if torch.cuda.device_count() > 1:
+            model.module.load_state_dict(torch.load(args.output_model_path))
+        else:
+            model.load_state_dict(torch.load(args.output_model_path))
+        evaluate(args, True)
+        return
+
     print("Start training.")
     trainset = read_dataset(args.train_path, workers_num=args.workers_num)
     print("Shuffling dataset")
