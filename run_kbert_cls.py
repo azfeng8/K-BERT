@@ -180,9 +180,6 @@ def main():
     parser.add_argument("--seed", type=int, default=7,
                         help="Random seed.")
 
-    # Evaluation options.
-    # parser.add_argument("--mean_reciprocal_rank", action="store_true", help="Evaluation metrics for DBQA dataset.")
-
     # kg
     parser.add_argument("--kg_name", required=True, help="KG name or path")
     parser.add_argument("--workers_num", type=int, default=1, help="number of process for loading dataset")
@@ -370,14 +367,6 @@ def main():
                 confusion[pred[j], gold[j]] += 1
             correct += torch.sum(pred == gold).item()
     
-        plt.figure()
-        plt.title("Evaluation: loss over time")
-        plt.xlabel("Batch num")
-        plt.ylabel("loss")
-        plt.plot(np.arange(len(losses)), np.array(losses))
-        plt.savefig('eval_loss.png')
-        plt.show()
-
         print("confusion matrix:")
         print(confusion)
         print("Report precision, recall, and f1:")
@@ -484,11 +473,10 @@ def main():
             save_model(model, args.output_model_path)
         else:
             continue
-        
-        # Skip evaluation on test during training (there's a final test eval at the end)
-        # print("Start evaluation on test dataset.")
-        # evaluate(args, True)
 
+        print("Evaluation on test dataset.")
+        evaluate(args, True)
+        
     # Save model
     if args.save_model_path:
         print(f"Saving model to {args.save_model_path}")
@@ -496,12 +484,6 @@ def main():
         print(f"Saving training losses to {args.save_model_path[:-3]}_losses.pt")
         torch.save(train_loss, f"{args.save_model_path[:-3]}_losses.pt")
     
-    # plt.figure()
-    # plt.title("Train loss over time (all epochs and batches)")
-    # plt.plot(np.arange((len(train_loss))), train_loss)
-    # plt.savefig('train_loss.png')
-    # plt.show()
-
     # Evaluation phase.
     print("Final evaluation on the test dataset.")
 
@@ -510,10 +492,6 @@ def main():
     else:
         model.load_state_dict(torch.load(args.output_model_path))
     evaluate(args, True)
-
-# def debug(path):
-#     model = build_model(path)
-#     evaluate(get_args())
 
 if __name__ == "__main__":
     main()
